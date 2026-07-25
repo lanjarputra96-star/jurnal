@@ -31,6 +31,23 @@
 </head>
 <body class="min-h-screen flex flex-col md:flex-row bg-gray-50">
 
+  <!-- Pop-Up Notifikasi Besar Sukses Absen (Khusus Mobile/Layar) -->
+  <div id="big-success-notification" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl transform transition-all scale-100 space-y-4">
+      <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto text-4xl">
+        ✅
+      </div>
+      <div>
+        <span class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold uppercase tracking-wider">Absensi Berhasil</span>
+        <h3 id="big-notif-name" class="text-2xl font-black text-gray-800 mt-3 mb-1">-</h3>
+        <p id="big-notif-status" class="text-sm font-semibold text-gray-500">-</p>
+      </div>
+      <button onclick="closeBigNotification()" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-green-700 transition-colors">
+        Tutup / Lanjutkan
+      </button>
+    </div>
+  </div>
+
   <!-- Tombol Menu Hamburger Mobile -->
   <div class="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
     <div class="flex items-center gap-2">
@@ -114,10 +131,10 @@
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
             <h3 class="font-semibold text-gray-700 text-lg">Pemindai Barcode / QR Code</h3>
             <div class="flex items-center gap-2">
-              <!-- Pilihan Kamera (Depan/Belakang) -->
+              <!-- Pilihan Kamera (Default ke Kamera Depan) -->
               <select id="camera-source-select" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none bg-gray-50 font-medium text-gray-700">
+                <option value="user" selected>Kamera Depan (Selfie)</option>
                 <option value="environment">Kamera Belakang (Utama)</option>
-                <option value="user">Kamera Depan (Selfie)</option>
               </select>
               <span class="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full font-bold">Auto-Save</span>
             </div>
@@ -185,10 +202,10 @@
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm flex flex-col">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
             <h3 class="font-semibold text-gray-700 text-lg">Pemindai Barcode / QR Code Siswa</h3>
-            <!-- Pilihan Kamera Karakter (Depan/Belakang) -->
+            <!-- Pilihan Kamera Karakter (Default ke Kamera Depan) -->
             <select id="char-camera-source-select" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none bg-gray-50 font-medium text-gray-700">
+              <option value="user" selected>Kamera Depan (Selfie)</option>
               <option value="environment">Kamera Belakang (Utama)</option>
-              <option value="user">Kamera Depan (Selfie)</option>
             </select>
           </div>
           <div id="reader-character" class="w-full bg-gray-100 rounded-xl overflow-hidden min-h-[250px]"></div>
@@ -637,7 +654,6 @@
       closeBtn.addEventListener('click', toggleSidebar);
       overlay.addEventListener('click', toggleSidebar);
 
-      // Tutup otomatis saat menu diklik di perangkat mobile
       document.querySelectorAll('#nav-menu button').forEach(btn => {
         btn.addEventListener('click', () => {
           if (window.innerWidth < 768) {
@@ -770,6 +786,7 @@
       if (btn.dataset.view !== 'add') stopCharCamera();
     });
 
+    // Fungsi Validasi & Penyimpanan Absensi (Cek Double Absen Hari Ini)
     function quickSaveAbsensi(status) {
       const student = document.getElementById('absensi-student').value;
       const notes = document.getElementById('absensi-notes').value.trim();
@@ -779,10 +796,30 @@
         return;
       }
 
+      const todayIso = new Date().toISOString().split('T')[0];
+      const alreadyAbsented = allRecords.some(r => r.type === 'absensi' && r.student.toLowerCase() === student.toLowerCase() && r.isoDate === todayIso);
+
+      if (alreadyAbsented) {
+        showMsg('absensi-result-message', `⚠️ Siswa "${student}" sudah melakukan presensi hari ini dan tidak bisa absen ulang!`, true);
+        return;
+      }
+
       addRecord(student, 'absensi', status, 0, notes || '-');
+      showBigNotification(student, `Status: ${status.toUpperCase()}`);
+      
       showMsg('absensi-result-message', `✅ Presensi "${status}" untuk ${student} berhasil disimpan!`, false);
       document.getElementById('absensi-notes').value = '';
       document.getElementById('absensi-student').value = '';
+    }
+
+    function showBigNotification(name, statusText) {
+      document.getElementById('big-notif-name').innerText = name;
+      document.getElementById('big-notif-status').innerText = statusText;
+      document.getElementById('big-success-notification').classList.remove('hidden');
+    }
+
+    function closeBigNotification() {
+      document.getElementById('big-success-notification').classList.add('hidden');
     }
 
     function quickSaveCharacter(typeKey, defaultCat) {
@@ -852,9 +889,20 @@
           const matched = studentNames.find(s => s.toLowerCase() === decodedText.trim().toLowerCase() || s.toLowerCase().includes(decodedText.trim().toLowerCase()));
           
           if (matched) {
+            const todayIso = new Date().toISOString().split('T')[0];
+            const alreadyAbsented = allRecords.some(r => r.type === 'absensi' && r.student.toLowerCase() === matched.toLowerCase() && r.isoDate === todayIso);
+
+            if (alreadyAbsented) {
+              showMsg('absensi-result-message', `⚠️ ${matched} sudah absen hari ini. Tidak bisa absen ulang!`, true);
+              return;
+            }
+
             lastScannedText = decodedText;
             lastScannedTime = now;
-            addRecord(matched, 'absensi', 'Hadir', 0, 'Scan Barcode Otomatis');
+            addRecord(matched, 'absensi', 'Hadir', 0, 'Scan Barcode Kamera Depan');
+            
+            // Munculkan pop-up notifikasi besar di layar mobile
+            showBigNotification(matched, 'HADIR (Scan Kamera)');
             showMsg('absensi-result-message', `🎯 [OTOMATIS] Presensi HADIR untuk ${matched} berhasil disimpan!`, false);
           } else {
             showMsg('absensi-result-message', `⚠️ Barcode / QR Code: "${decodedText}" tidak terdaftar!`, true);
