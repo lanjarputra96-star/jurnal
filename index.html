@@ -10,6 +10,8 @@
   <script src="https://unpkg.com/html5-qrcode"></script>
   <!-- Library Generator QR Code -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Library Generator Barcode Batang (JsBarcode) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <!-- Library Export Excel Real (.xlsx) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- Library Export PDF (jsPDF + autoTable) -->
@@ -88,9 +90,44 @@
     <!-- View Absensi -->
     <div class="view active" id="view-absensi">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">📷 Presensi Harian Siswa</h2>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl">
-        
-        <!-- Form Manual Siswa Tidak Hadir / Khusus -->
+      
+      <!-- Indicator Support Scanner USB / Bluetooth -->
+      <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-4 flex items-center justify-between text-xs text-indigo-900">
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+          <span class="font-bold">Scanner Eksternal Ready:</span>
+          <span>Arahkan dan tembak barcode/QR dengan scanner USB/Bluetooth di halaman mana saja.</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-6 max-w-6xl">
+        <!-- 1. Pemindai Kamera (Bagian Atas) -->
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm flex flex-col">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+            <h3 class="font-semibold text-gray-700 text-lg">Pemindai Barcode / QR Code</h3>
+            <div class="flex items-center gap-2">
+              <select id="camera-source-select" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none bg-gray-50 font-medium text-gray-700">
+                <option value="user">Kamera Depan (Selfie)</option>
+                <option value="environment" selected>Kamera Belakang (Utama)</option>
+              </select>
+              <span class="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full font-bold">Auto-Save</span>
+            </div>
+          </div>
+          <div id="reader" class="w-full bg-gray-100 rounded-xl overflow-hidden min-h-[250px]"></div>
+          <div class="flex gap-3 mt-4">
+            <button type="button" id="start-camera-btn" class="flex-1 px-4 py-2.5 theme-bg-primary text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+              <i data-lucide="camera" class="w-4 h-4"></i><span>Buka Kamera</span>
+            </button>
+            <button type="button" id="stop-camera-btn" class="hidden flex-1 px-4 py-2.5 bg-red-100 text-red-600 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors flex items-center justify-center gap-2">
+              <i data-lucide="camera-off" class="w-4 h-4"></i><span>Matikan Kamera</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Form Manual Siswa Tidak Hadir / Khusus (Bagian Bawah) -->
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm space-y-4">
           <h3 class="font-semibold text-gray-700 text-lg">Input Manual (Siswa Tidak Hadir / Khusus)</h3>
           <div>
@@ -126,29 +163,6 @@
           <div id="absensi-result-message" class="hidden text-sm p-3 rounded-lg font-medium"></div>
         </div>
 
-        <!-- Pemindai Kamera -->
-        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm flex flex-col">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-            <h3 class="font-semibold text-gray-700 text-lg">Pemindai Barcode / QR Code</h3>
-            <div class="flex items-center gap-2">
-              <!-- Pilihan Kamera (Default Diubah ke Kamera Belakang/Environment) -->
-              <select id="camera-source-select" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none bg-gray-50 font-medium text-gray-700">
-                <option value="user">Kamera Depan (Selfie)</option>
-                <option value="environment" selected>Kamera Belakang (Utama)</option>
-              </select>
-              <span class="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full font-bold">Auto-Save</span>
-            </div>
-          </div>
-          <div id="reader" class="w-full bg-gray-100 rounded-xl overflow-hidden min-h-[250px]"></div>
-          <div class="flex gap-3 mt-4">
-            <button type="button" id="start-camera-btn" class="flex-1 px-4 py-2.5 theme-bg-primary text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-              <i data-lucide="camera" class="w-4 h-4"></i><span>Buka Kamera</span>
-            </button>
-            <button type="button" id="stop-camera-btn" class="hidden flex-1 px-4 py-2.5 bg-red-100 text-red-600 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors flex items-center justify-center gap-2">
-              <i data-lucide="camera-off" class="w-4 h-4"></i><span>Matikan Kamera</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       <!-- Tabel Hari Ini -->
@@ -163,9 +177,53 @@
     <div class="view" id="view-add">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 Catatan Karakter & Kedisiplinan</h2>
       
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl">
+      <div class="flex flex-col gap-6 max-w-6xl">
+        
+        <!-- 1. Pemindai Kamera (Bagian Atas) -->
+        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm flex flex-col">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+            <h3 class="font-semibold text-gray-700 text-lg">Pemindai Barcode / QR Code Siswa</h3>
+            <select id="char-camera-source-select" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none bg-gray-50 font-medium text-gray-700">
+              <option value="user">Kamera Depan (Selfie)</option>
+              <option value="environment" selected>Kamera Belakang (Utama)</option>
+            </select>
+          </div>
+          <div id="reader-character" class="w-full bg-gray-100 rounded-xl overflow-hidden min-h-[250px]"></div>
+          <div class="flex gap-3 mt-4">
+            <button type="button" id="start-char-camera-btn" class="flex-1 px-4 py-2.5 theme-bg-primary text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
+              <i data-lucide="camera" class="w-4 h-4"></i><span>Buka Kamera</span>
+            </button>
+            <button type="button" id="stop-char-camera-btn" class="hidden flex-1 px-4 py-2.5 bg-red-100 text-red-600 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors flex items-center justify-center gap-2">
+              <i data-lucide="camera-off" class="w-4 h-4"></i><span>Matikan Kamera</span>
+            </button>
+          </div>
+
+          <!-- Pilihan Aksi Setelah Scan Kamera (Tombol Pilihan Langsung) -->
+          <div id="scanned-action-container" class="hidden mt-6 pt-5 border-t border-gray-100 bg-indigo-50/50 p-4 rounded-xl">
+            <p class="text-xs font-bold text-gray-700 mb-1">Siswa Terdeteksi:</p>
+            <h4 id="scanned-student-name" class="text-lg font-black text-indigo-900 mb-3">-</h4>
+            <p class="text-xs font-medium text-gray-600 mb-3">Pilih Jenis Catatan Untuk Langsung Menyimpan:</p>
+            
+            <div class="grid grid-cols-3 gap-3">
+              <button type="button" onclick="saveScanCharacter('apresiasi', 'Apresiasi Sederhana')" class="type-btn flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-green-200 bg-green-50 hover:bg-green-100 transition-all">
+                <span class="text-2xl">🟢</span>
+                <span class="text-[10px] sm:text-xs font-bold text-green-700 text-center" id="scan-btn-apresiasi">APRESIASI</span>
+              </button>
+              <button type="button" onclick="saveScanCharacter('izin', 'Izin Keluar Kelas')" class="type-btn flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-yellow-200 bg-yellow-50 hover:bg-yellow-100 transition-all">
+                <span class="text-2xl">🟡</span>
+                <span class="text-[10px] sm:text-xs font-bold text-yellow-700 text-center" id="scan-btn-izin">IZIN KELUAR</span>
+              </button>
+              <button type="button" onclick="saveScanCharacter('peringatan', 'Peringatan Kedisiplinan')" class="type-btn flex flex-col items-center gap-2 p-3 rounded-xl border-2 border-red-200 bg-red-50 hover:bg-red-100 transition-all">
+                <span class="text-2xl">🔴</span>
+                <span class="text-[10px] sm:text-xs font-bold text-red-700 text-center" id="scan-btn-peringatan">PERINGATAN</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Input Catatan Karakter Manual (Bagian Bawah) -->
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm space-y-5">
-          <h3 class="font-semibold text-gray-700 text-lg">Input Catatan Karakter</h3>
+          <h3 class="font-semibold text-gray-700 text-lg">Input Manual Catatan Karakter</h3>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Siswa</label>
             <select id="input-student" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-300 outline-none bg-white">
@@ -199,25 +257,6 @@
           <div id="form-message" class="hidden text-sm p-3 rounded-lg font-medium"></div>
         </div>
 
-        <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm flex flex-col">
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-            <h3 class="font-semibold text-gray-700 text-lg">Pemindai Barcode / QR Code Siswa</h3>
-            <!-- Pilihan Kamera Karakter (Default Diubah ke Kamera Belakang/Environment) -->
-            <select id="char-camera-source-select" class="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none bg-gray-50 font-medium text-gray-700">
-              <option value="user">Kamera Depan (Selfie)</option>
-              <option value="environment" selected>Kamera Belakang (Utama)</option>
-            </select>
-          </div>
-          <div id="reader-character" class="w-full bg-gray-100 rounded-xl overflow-hidden min-h-[250px]"></div>
-          <div class="flex gap-3 mt-4">
-            <button type="button" id="start-char-camera-btn" class="flex-1 px-4 py-2.5 theme-bg-primary text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2">
-              <i data-lucide="camera" class="w-4 h-4"></i><span>Buka Kamera</span>
-            </button>
-            <button type="button" id="stop-char-camera-btn" class="hidden flex-1 px-4 py-2.5 bg-red-100 text-red-600 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors flex items-center justify-center gap-2">
-              <i data-lucide="camera-off" class="w-4 h-4"></i><span>Matikan Kamera</span>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -228,6 +267,85 @@
         <button onclick="deleteAllStudents()" class="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-semibold hover:bg-red-100 flex items-center gap-2 self-start md:self-auto">
           <i data-lucide="trash-2" class="w-4 h-4"></i> Hapus Seluruh Data Siswa
         </button>
+      </div>
+
+      <!-- SINKRONISASI DATA SISWA VIA CSV SPESIFIK -->
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6">
+        <h3 class="font-bold text-blue-900 text-base mb-1 flex items-center gap-2">
+          🔄 Sinkronisasi Data Siswa
+        </h3>
+        <p class="text-xs text-blue-700 mb-3">Tekan tombol di bawah untuk menyinkronkan data siswa langsung dari server CSV publik.</p>
+        <div class="flex items-center gap-3">
+          <button id="btnSync" onclick="sinkronDataSiswa()" class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer disabled:cursor-not-allowed">
+            🔄 Sinkron Data Siswa
+          </button>
+          <div id="status" class="text-sm font-medium"></div>
+        </div>
+      </div>
+
+      <!-- PERBARUI & SINKRONISASI DATA REKAP (2 ENDPOINT DUAL DATABASE: ABSENSI & CATATAN) -->
+      <div class="bg-white rounded-xl p-6 border border-indigo-100 shadow-sm mb-6 bg-gradient-to-r from-indigo-50/40 to-white">
+        <h3 class="font-bold text-indigo-900 text-lg mb-2 flex items-center gap-2">
+          <i data-lucide="refresh-cw" class="w-5 h-5 theme-text-primary"></i> Sinkronisasi & Konfigurasi Dual Database
+        </h3>
+        <p class="text-xs text-gray-600 mb-4">Ganti perangkat? Hubungkan link spreadsheet khusus Absensi dan Catatan Karakter agar rekap otomatis terbarui.</p>
+
+        <div class="space-y-4">
+          <!-- Pilihan Sumber Sinkronisasi -->
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Pilih Metode Sinkronisasi:</label>
+            <select id="sync-source-type" onchange="toggleSyncSourceInput()" class="w-full border border-indigo-200 rounded-lg px-3 py-2 text-sm outline-none bg-white font-medium text-gray-800">
+              <option value="webapp">1. URL Web App Google Apps Script (2 Database Terpisah)</option>
+              <option value="csv_url">2. URL CSV Publik Google Sheets (2 Database Terpisah)</option>
+              <option value="upload">3. Upload File Rekap Excel / CSV (Lokal)</option>
+            </select>
+          </div>
+
+          <!-- Opsi 1: URL Web App / Apps Script (Dual Input) -->
+          <div id="sync-input-container-webapp" class="space-y-3">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-600 mb-1">🔗 Link Web App Database ABSENSI:</label>
+              <input type="url" id="sync-absensi-url" class="w-full border border-indigo-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300 bg-white" placeholder="https://script.google.com/macros/s/AKfycbzlejabj.../exec">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-600 mb-1">🔗 Link Web App Database CATATAN SISWA:</label>
+              <input type="url" id="sync-catatan-url" class="w-full border border-indigo-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300 bg-white" placeholder="https://script.google.com/macros/s/AKfycbxWQoMmp.../exec">
+            </div>
+            <div class="flex gap-2 pt-1">
+              <button type="button" onclick="saveDatabaseUrls()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan Link Database
+              </button>
+              <button type="button" onclick="syncDataFromSpreadsheet()" class="px-5 py-2 theme-bg-primary text-white rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+                <i data-lucide="cloud-download" class="w-4 h-4"></i> Sinkronkan Kedua Web App
+              </button>
+            </div>
+          </div>
+
+          <!-- Opsi 2: URL CSV Publik Google Sheets (Dual Input) -->
+          <div id="sync-input-container-csv" class="hidden space-y-3">
+            <div>
+              <label class="block text-[11px] font-bold text-gray-600 mb-1">📄 Link CSV Publik Database ABSENSI:</label>
+              <input type="url" id="sync-csv-absensi-url" class="w-full border border-indigo-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300 bg-white" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-gray-600 mb-1">📄 Link CSV Publik Database CATATAN SISWA:</label>
+              <input type="url" id="sync-csv-catatan-url" class="w-full border border-indigo-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300 bg-white" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv">
+            </div>
+            <button type="button" onclick="syncDataFromPublicCSV()" class="px-5 py-2.5 theme-bg-primary text-white rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2">
+              <i data-lucide="link" class="w-4 h-4"></i> Import Dari Kedua CSV Publik
+            </button>
+          </div>
+
+          <!-- Opsi 3: Upload Excel / CSV Lokal -->
+          <div id="sync-input-container-upload" class="hidden flex-col sm:flex-row gap-3 items-center">
+            <input type="file" id="recap-file-input" accept=".xlsx, .csv" class="block w-full text-xs text-gray-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold theme-bg-primary file:text-white cursor-pointer bg-white border border-indigo-200 rounded-lg">
+            <button type="button" onclick="uploadRecapFile()" class="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
+              <i data-lucide="file-up" class="w-4 h-4"></i> Upload & Perbarui Rekap
+            </button>
+          </div>
+        </div>
+
+        <div id="sync-message" class="hidden text-sm p-3 rounded-lg font-medium mt-3"></div>
       </div>
 
       <!-- Pengaturan Tema Warna Menu & Background Page -->
@@ -349,7 +467,7 @@
       <!-- Import & Input Siswa -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm space-y-4">
-          <h3 class="font-semibold text-gray-700 text-lg">1. Import Data via CSV</h3>
+          <h3 class="font-semibold text-gray-700 text-lg">1. Import Data Siswa via CSV</h3>
           <p class="text-xs text-gray-500">Gunakan format file CSV untuk memasukkan seluruh daftar nama siswa sekaligus.</p>
           <div class="flex gap-2">
             <button type="button" onclick="downloadExcelTemplate()" class="px-3 py-2 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors flex items-center gap-1.5">
@@ -370,9 +488,10 @@
         </div>
       </div>
 
+      <!-- Database Siswa & Ekspor Kode -->
       <div class="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="font-semibold text-gray-700 text-lg">Database Siswa & Kartu QR Code</h3>
+          <h3 class="font-semibold text-gray-700 text-lg">Database Siswa & Kartu Ekspor Code</h3>
           <span id="student-count-badge" class="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-bold">0 Siswa</span>
         </div>
         <div class="overflow-x-auto">
@@ -381,7 +500,7 @@
               <tr>
                 <th class="p-3">No</th>
                 <th class="p-3">Nama Siswa</th>
-                <th class="p-3">Aksi QR Code</th>
+                <th class="p-3">Aksi Ekspor Kode</th>
                 <th class="p-3 text-center">Hapus</th>
               </tr>
             </thead>
@@ -586,18 +705,14 @@
   </main>
 
   <div class="hidden" id="qr-temp-container"></div>
+  <div class="hidden"><svg id="barcode-temp-svg"></svg></div>
 
   <script>
-    const defaultStudents = [
-      'Adilla Syafa\'atunnisa Wibowo','ALKABIRU KARIM','ALMASHYRA RUMAISHA SIREGAR','ALQUEENSHAFA ZARINAZAN WIDODO',
-      'ALULA SHAHIN PERMANA','ALVARENDRA ABQORY HAYFA','Annasya Faradina Arafah','AQILA GRABINA YAHYA',
-      'Arshaka Vierendra Shafwan','AURANTIASYA SHAKILA ANWAR','Azka Maulana Fadhil','DILFI NATHAN RAJENDRA',
-      'Fathan Yazid Hermanta','FLORENT ANGELICCA. HR','HAMIZAN FERDIAN','M. ALFARIZI SHAGUFTA ALI',
-      'MUHAMMAD AL FATIH','Muhammad Al Kahfi','MUHAMMAD ARSHYAD NAWAWI','MUHAMMAD BILAL AR-RASHIF DARMAWAN',
-      'MUHAMMAD BYANTARA FANGGIDAE','MUHAMMAD HELMI','MUHAMMAD RAGIL OCTORA','QIARRA NATHANIA WIBOWO',
-      'Rafif Soediro Ramadhan','RAKA ALBARRA DZAKI','SAKHA RAJENDRA PUTRA JOEY','SULTAN KIANDRA AL AMIN','Zahreen Tsabita'
-    ];
+    // URL CSV Google Sheets Publik
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVTM0rcdUp9HW95jpg_zoFfOr3KOJW9VbVCFUYgEroGAlPp2VdUq7mBBjXND1waG3ccWNiNLq2gypS/pub?gid=0&single=true&output=csv";
 
+    // Data siswa default
+    const defaultStudents = [];
     const defaultSettings = { apresiasi: 20, izin: -5, peringatan: -10 };
 
     const defaultSchoolMeta = {
@@ -617,6 +732,12 @@
       ocean:  { primary: '#0e7490', hover: '#155e75', bgLight: 'rgba(14,116,144,0.1)', pageBg: '#ecfeff' }
     };
 
+    let urlAbsensiSheet = localStorage.getItem('kelasku_url_absensi') || "https://script.google.com/macros/s/AKfycbzlejabjKAdHGUz7EJoiKCNIutqNAUhHG38yIMQBS1dEyb-wXUkBrc7QwvoZ3p7En9k/exec";
+    let urlCatatanSheet = localStorage.getItem('kelasku_url_catatan') || "https://script.google.com/macros/s/AKfycbxWQoMmp4sj_1_aYQxDNJwzOgELE35lgDM1-AMHPfzaimVXt-RdsFmrV9p_oBeXlxeF/exec";
+
+    let urlCsvAbsensi = localStorage.getItem('kelasku_csv_absensi') || "";
+    let urlCsvCatatan = localStorage.getItem('kelasku_csv_catatan') || "";
+
     let currentTheme = localStorage.getItem('kelasku_theme_color') || 'indigo';
     let studentNames = JSON.parse(localStorage.getItem('kelasku_students')) || JSON.parse(localStorage.getItem('markas3_students')) || defaultStudents;
     let allRecords = JSON.parse(localStorage.getItem('kelasku_records')) || JSON.parse(localStorage.getItem('markas3_records')) || [];
@@ -627,6 +748,11 @@
     let charQrcodeScanner = null;
     let lastScannedText = "";
     let lastScannedTime = 0;
+    let activeScannedStudent = "";
+
+    // Variabel Penampung Scanner Eksternal
+    let externalScanBuffer = "";
+    let externalScanTimeout = null;
 
     document.addEventListener('DOMContentLoaded', () => {
       applyTheme(currentTheme);
@@ -634,10 +760,139 @@
       populateStudentDropdowns();
       loadSettingsUI();
       loadSchoolMetaUI();
+      loadDatabaseUrlsUI();
       renderAll();
       setupCSVImporter();
       setupMobileSidebar();
+      setupExternalScannerListener();
     });
+
+    // --- FUNGSI SINKRONISASI DATA SISWA DARI CSV ---
+    async function sinkronDataSiswa() {
+      const btn = document.getElementById('btnSync');
+      const statusDiv = document.getElementById('status');
+
+      if (btn) btn.disabled = true;
+      if (statusDiv) {
+        statusDiv.style.color = "#d97706";
+        statusDiv.innerText = "Membaca dan memproses data dari server...";
+      }
+
+      try {
+        const response = await fetch(CSV_URL);
+        if (!response.ok) throw new Error("Gagal mengunduh file CSV");
+
+        const csvText = await response.text();
+        const dataSiswa = parseCSV(csvText);
+
+        console.log("Data Siswa Berhasil Disinkronkan:", dataSiswa);
+
+        let addedCount = 0;
+        dataSiswa.forEach(item => {
+          const nama = item["Nama Siswa"] || item["nama"] || item["Nama"] || Object.values(item)[0];
+          if (nama && !studentNames.includes(nama)) {
+            studentNames.push(nama);
+            addedCount++;
+          }
+        });
+
+        saveStudents();
+
+        if (statusDiv) {
+          statusDiv.style.color = "#16a34a";
+          statusDiv.innerText = `✅ Sinkronisasi berhasil! ${addedCount} data baru ditambahkan (Total: ${dataSiswa.length}).`;
+        }
+
+      } catch (error) {
+        console.error("Error Sync:", error);
+        if (statusDiv) {
+          statusDiv.style.color = "#dc2626";
+          statusDiv.innerText = "❌ Terjadi kesalahan saat sinkronisasi data.";
+        }
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split("\n");
+      if (lines.length === 0) return [];
+
+      const headers = lines[0].split(",").map(header => header.trim().replace(/^"|"$/g, ''));
+      const result = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        
+        const currentLine = lines[i].split(",").map(val => val.trim().replace(/^"|"$/g, ''));
+        const obj = {};
+
+        headers.forEach((header, index) => {
+          obj[header] = currentLine[index] || "";
+        });
+
+        result.push(obj);
+      }
+
+      return result;
+    }
+
+    // --- INTEGRASI SCANNER BARCODE EKSTERNAL (USB/BLUETOOTH) ---
+    function setupExternalScannerListener() {
+      document.addEventListener('keydown', (e) => {
+        const activeTag = document.activeElement.tagName.toLowerCase();
+        if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
+          return;
+        }
+
+        if (e.key === 'Enter') {
+          if (externalScanBuffer.trim().length > 0) {
+            handleExternalScanResult(externalScanBuffer.trim());
+            externalScanBuffer = "";
+          }
+        } else if (e.key.length === 1) {
+          externalScanBuffer += e.key;
+
+          clearTimeout(externalScanTimeout);
+          externalScanTimeout = setTimeout(() => {
+            externalScanBuffer = "";
+          }, 100);
+        }
+      });
+    }
+
+    function handleExternalScanResult(scannedCode) {
+      const matched = studentNames.find(s => 
+        s.toLowerCase() === scannedCode.toLowerCase() || 
+        s.toLowerCase().includes(scannedCode.toLowerCase())
+      );
+
+      const activeView = document.querySelector('.view.active').id;
+
+      if (matched) {
+        if (activeView === 'view-add') {
+          activeScannedStudent = matched;
+          document.getElementById('scanned-student-name').innerText = matched;
+          document.getElementById('scanned-action-container').classList.remove('hidden');
+          document.getElementById('input-student').value = matched;
+          showMsg('form-message', `🎯 [SCANNER EKSTERNAL] Siswa ${matched} Terdeteksi!`, false);
+        } else {
+          const todayIso = new Date().toISOString().split('T')[0];
+          const alreadyAbsented = allRecords.some(r => r.type === 'absensi' && r.student.toLowerCase() === matched.toLowerCase() && r.isoDate === todayIso);
+
+          if (alreadyAbsented) {
+            showMsg('absensi-result-message', `⚠️ ${matched} sudah absen hari ini.`, true);
+            return;
+          }
+
+          addRecord(matched, 'absensi', 'Hadir', 0, 'Scan Scanner Eksternal');
+          showBigNotification(matched, 'HADIR (Scanner Eksternal)');
+          showMsg('absensi-result-message', `🎯 [SCANNER EKSTERNAL] Presensi HADIR untuk ${matched} berhasil disimpan!`, false);
+        }
+      } else {
+        showMsg('absensi-result-message', `⚠️ Kode: "${scannedCode}" tidak terdaftar di database!`, true);
+      }
+    }
 
     function setupMobileSidebar() {
       const sidebar = document.getElementById('app-sidebar');
@@ -661,6 +916,226 @@
           }
         });
       });
+    }
+
+    function loadDatabaseUrlsUI() {
+      if (document.getElementById('sync-absensi-url')) document.getElementById('sync-absensi-url').value = urlAbsensiSheet;
+      if (document.getElementById('sync-catatan-url')) document.getElementById('sync-catatan-url').value = urlCatatanSheet;
+      if (document.getElementById('sync-csv-absensi-url')) document.getElementById('sync-csv-absensi-url').value = urlCsvAbsensi;
+      if (document.getElementById('sync-csv-catatan-url')) document.getElementById('sync-csv-catatan-url').value = urlCsvCatatan;
+    }
+
+    function saveDatabaseUrls() {
+      urlAbsensiSheet = document.getElementById('sync-absensi-url').value.trim();
+      urlCatatanSheet = document.getElementById('sync-catatan-url').value.trim();
+      localStorage.setItem('kelasku_url_absensi', urlAbsensiSheet);
+      localStorage.setItem('kelasku_url_catatan', urlCatatanSheet);
+      showMsg('sync-message', '✅ Berhasil menyimpan dua URL Web App Database!', false);
+    }
+
+    function toggleSyncSourceInput() {
+      const type = document.getElementById('sync-source-type').value;
+      document.getElementById('sync-input-container-webapp').classList.add('hidden');
+      document.getElementById('sync-input-container-csv').classList.add('hidden');
+      document.getElementById('sync-input-container-upload').classList.add('hidden');
+
+      if (type === 'webapp') {
+        document.getElementById('sync-input-container-webapp').classList.remove('hidden');
+      } else if (type === 'csv_url') {
+        document.getElementById('sync-input-container-csv').classList.remove('hidden');
+      } else if (type === 'upload') {
+        document.getElementById('sync-input-container-upload').classList.remove('hidden');
+        document.getElementById('sync-input-container-upload').classList.add('flex');
+      }
+    }
+
+    async function syncDataFromSpreadsheet() {
+      saveDatabaseUrls();
+      showMsg('sync-message', '🔄 Memuat data dari Database Absensi & Catatan Siswa...', false);
+
+      let fetchedRecords = [];
+
+      try {
+        if (urlAbsensiSheet) {
+          const resAbs = await fetch(urlAbsensiSheet, { method: 'GET' });
+          if (resAbs.ok) {
+            const dataAbs = await resAbs.json();
+            const listAbs = Array.isArray(dataAbs) ? dataAbs : (dataAbs.records || []);
+            listAbs.forEach(r => r.type = 'absensi');
+            fetchedRecords = fetchedRecords.concat(listAbs);
+          }
+        }
+
+        if (urlCatatanSheet) {
+          const resCat = await fetch(urlCatatanSheet, { method: 'GET' });
+          if (resCat.ok) {
+            const dataCat = await resCat.json();
+            const listCat = Array.isArray(dataCat) ? dataCat : (dataCat.records || []);
+            fetchedRecords = fetchedRecords.concat(listCat);
+          }
+        }
+
+        if (fetchedRecords.length > 0) {
+          allRecords = fetchedRecords;
+          saveRecords();
+          showMsg('sync-message', `✅ Sinkronisasi sukses! ${fetchedRecords.length} data rekap diperbarui dari 2 Spreadsheet.`, false);
+        } else {
+          showMsg('sync-message', '⚠️ Berhasil terhubung, namun tidak ada data yang ditarik. Pastikan doGet Web App aktif.', true);
+        }
+      } catch (error) {
+        console.warn("Gagal sinkronisasi otomatis Web App:", error);
+        showMsg('sync-message', '⚠️ Periksa URL Web App atau pastikan Apps Script Anda dipublikasikan sebagai Web App (Anyone).', true);
+      }
+    }
+
+    async function syncDataFromPublicCSV() {
+      const urlAbs = document.getElementById('sync-csv-absensi-url').value.trim();
+      const urlCat = document.getElementById('sync-csv-catatan-url').value.trim();
+
+      if (!urlAbs && !urlCat) {
+        showMsg('sync-message', '⚠️ Masukkan minimal satu URL CSV Publik Google Sheets!', true);
+        return;
+      }
+
+      localStorage.setItem('kelasku_csv_absensi', urlAbs);
+      localStorage.setItem('kelasku_csv_catatan', urlCat);
+
+      showMsg('sync-message', '🔄 Mengunduh data CSV dari Google Sheets...', false);
+
+      let combinedRows = [];
+
+      try {
+        if (urlAbs) {
+          const res1 = await fetch(urlAbs);
+          if (res1.ok) {
+            const csvText1 = await res1.text();
+            combinedRows = combinedRows.concat(parseCSVToRows(csvText1, 'absensi'));
+          }
+        }
+
+        if (urlCat) {
+          const res2 = await fetch(urlCat);
+          if (res2.ok) {
+            const csvText2 = await res2.text();
+            combinedRows = combinedRows.concat(parseCSVToRows(csvText2, 'catatan'));
+          }
+        }
+
+        parseAndLoadArrayData(combinedRows);
+      } catch (error) {
+        showMsg('sync-message', '❌ Gagal menyinkronkan CSV dari URL. Pastikan Google Sheet telah dipublikasikan ke Web (Format CSV).', true);
+      }
+    }
+
+    function uploadRecapFile() {
+      const fileInput = document.getElementById('recap-file-input');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        showMsg('sync-message', '⚠️ Pilih file Excel (.xlsx) atau CSV terlebih dahulu!', true);
+        return;
+      }
+
+      showMsg('sync-message', '🔄 Membaca file rekap...', false);
+
+      const reader = new FileReader();
+
+      if (file.name.endsWith('.csv')) {
+        reader.onload = function(e) {
+          const rows = parseCSVToRows(e.target.result, 'auto');
+          parseAndLoadArrayData(rows);
+        };
+        reader.readAsText(file);
+      } else {
+        reader.onload = function(e) {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            let allParsedRows = [];
+
+            workbook.SheetNames.forEach(sheetName => {
+              const worksheet = workbook.Sheets[sheetName];
+              const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+              allParsedRows = allParsedRows.concat(jsonRows);
+            });
+
+            parseAndLoadArrayData(allParsedRows);
+          } catch (err) {
+            showMsg('sync-message', '❌ Gagal memproses file Excel. Pastikan format file valid.', true);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    function parseCSVToRows(csvText, defaultType) {
+      const lines = csvText.split('\n').filter(line => line.trim() !== '');
+      return lines.map(line => {
+        const cells = line.split(',').map(cell => cell.replace(/^"(.*)"$/, '$1').trim());
+        cells.push(defaultType);
+        return cells;
+      });
+    }
+
+    function parseAndLoadArrayData(rows) {
+      if (!rows || rows.length === 0) {
+        showMsg('sync-message', '⚠️ File / data kosong!', true);
+        return;
+      }
+
+      let parsedRecords = [];
+      let headerFound = false;
+
+      rows.forEach((row) => {
+        if (!row || row.length < 2) return;
+        
+        const strRow = row.map(c => String(c).toLowerCase());
+        if (strRow.includes('nama siswa') || strRow.includes('siswa')) {
+          headerFound = true;
+          return;
+        }
+
+        if (headerFound && row[1]) {
+          const name = String(row[1] || '').trim();
+          if (!name || name === 'Nama Siswa') return;
+
+          const statusOrCat = String(row[2] || 'Hadir').trim();
+          let points = 0;
+          let type = 'absensi';
+
+          if (row.length >= 7 || statusOrCat.includes('Apresiasi') || statusOrCat.includes('Peringatan') || statusOrCat.includes('Izin')) {
+            points = parseInt(row[3]) || 0;
+            type = points > 0 ? 'apresiasi' : points < 0 ? 'peringatan' : 'izin';
+          } else {
+            type = 'absensi';
+          }
+
+          const time = String(row[3] || row[4] || new Date().toLocaleTimeString('id-ID')).trim();
+          const date = String(row[4] || row[5] || new Date().toLocaleDateString('id-ID')).trim();
+          const notes = String(row[5] || row[6] || '-').trim();
+
+          parsedRecords.push({
+            id: Date.now() + Math.random(),
+            student: name,
+            type: type,
+            statusOrCat: statusOrCat,
+            points: points,
+            date: date,
+            isoDate: new Date().toISOString().split('T')[0],
+            timestamp: Date.now(),
+            time: time,
+            notes: notes
+          });
+        }
+      });
+
+      if (parsedRecords.length > 0) {
+        allRecords = parsedRecords;
+        saveRecords();
+        showMsg('sync-message', `✅ Berhasil memperbarui ${parsedRecords.length} data rekap ke perangkat ini!`, false);
+      } else {
+        showMsg('sync-message', '⚠️ Format data rekap tidak sesuai. Pastikan header memiliki kolom "Nama Siswa".', true);
+      }
     }
 
     function setThemeColor(themeKey) {
@@ -748,6 +1223,10 @@
       document.getElementById('btn-label-apresiasi').innerText = `APRESIASI (+${pointSettings.apresiasi})`;
       document.getElementById('btn-label-izin').innerText = `IZIN KELUAR (${pointSettings.izin})`;
       document.getElementById('btn-label-peringatan').innerText = `PERINGATAN (${pointSettings.peringatan})`;
+
+      document.getElementById('scan-btn-apresiasi').innerText = `APRESIASI (+${pointSettings.apresiasi})`;
+      document.getElementById('scan-btn-izin').innerText = `IZIN KELUAR (${pointSettings.izin})`;
+      document.getElementById('scan-btn-peringatan').innerText = `PERINGATAN (${pointSettings.peringatan})`;
     }
 
     function savePointSettings() {
@@ -786,7 +1265,6 @@
       if (btn.dataset.view !== 'add') stopCharCamera();
     });
 
-    // Fungsi Validasi & Penyimpanan Absensi (Cek Double Absen Hari Ini)
     function quickSaveAbsensi(status) {
       const student = document.getElementById('absensi-student').value;
       const notes = document.getElementById('absensi-notes').value.trim();
@@ -838,6 +1316,17 @@
       document.getElementById('input-student').value = '';
     }
 
+    function saveScanCharacter(typeKey, defaultCat) {
+      if (!activeScannedStudent) return;
+      const points = pointSettings[typeKey] || 0;
+
+      addRecord(activeScannedStudent, typeKey, defaultCat, points, 'Hasil Scan Barcode');
+      showBigNotification(activeScannedStudent, `CATATAN: ${defaultCat.toUpperCase()} (${points > 0 ? '+' : ''}${points} POIN)`);
+
+      document.getElementById('scanned-action-container').classList.add('hidden');
+      activeScannedStudent = "";
+    }
+
     function addRecord(student, type, statusOrCat, points, notes) {
       const newRecord = {
         id: Date.now(),
@@ -854,23 +1343,29 @@
       allRecords.unshift(newRecord);
       saveRecords();
 
-      // --- KODE PENGHUBUNG KE GOOGLE SHEETS OTOMATIS ---
-      const urlWebApps = "https://script.google.com/macros/s/AKfycbzjW-dM3pCaSYtgtxf_4q74iFCJEW_s_JI-8CUwkLbb0cRvmtt8NKjypMXPtyipVv23QQ/exec"; 
-      
+      const targetUrl = (type === 'absensi') ? urlAbsensiSheet : urlCatatanSheet;
+
       const dataKirim = {
           nama: student,
-          keterangan: `${type.toUpperCase()} - ${statusOrCat} (${notes})`
+          keterangan: `${type.toUpperCase()} - ${statusOrCat} (${notes})`,
+          poin: points,
+          status: statusOrCat,
+          tipe: type,
+          catatan: notes,
+          waktu: newRecord.time,
+          tanggal: newRecord.date
       };
 
-      fetch(urlWebApps, {
-          method: "POST",
-          mode: "no-cors",
-          headers: {
-              "Content-Type": "application/json"
-          },
-          body: JSON.stringify(dataKirim)
-      }).catch(error => console.error("Gagal kirim ke sheets:", error));
-      // ------------------------------------------------
+      if (targetUrl && targetUrl.startsWith("http")) {
+        fetch(targetUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(dataKirim)
+        }).catch(error => console.error("Gagal mengirim data ke Google Sheet:", error));
+      }
     }
 
     document.getElementById('start-camera-btn').addEventListener('click', () => {
@@ -901,7 +1396,6 @@
             lastScannedTime = now;
             addRecord(matched, 'absensi', 'Hadir', 0, 'Scan Barcode Kamera');
             
-            // Munculkan pop-up notifikasi besar di layar mobile
             showBigNotification(matched, 'HADIR (Scan Kamera)');
             showMsg('absensi-result-message', `🎯 [OTOMATIS] Presensi HADIR untuk ${matched} berhasil disimpan!`, false);
           } else {
@@ -945,8 +1439,10 @@
         (decodedText) => {
           const matched = studentNames.find(s => s.toLowerCase().includes(decodedText.toLowerCase()));
           if (matched) {
+            activeScannedStudent = matched;
+            document.getElementById('scanned-student-name').innerText = matched;
+            document.getElementById('scanned-action-container').classList.remove('hidden');
             document.getElementById('input-student').value = matched;
-            showMsg('form-message', `🎯 Terdeteksi QR: ${matched}. Silakan pilih tipe catatan di bawah.`, false);
           } else {
             showMsg('form-message', `⚠️ QR Code: "${decodedText}" tidak terdaftar di database.`, true);
           }
@@ -974,6 +1470,7 @@
     function resetCharCameraUI() {
       document.getElementById('start-char-camera-btn').classList.remove('hidden');
       document.getElementById('stop-char-camera-btn').classList.add('hidden');
+      document.getElementById('scanned-action-container').classList.add('hidden');
     }
 
     function switchRecapTab(tabName) {
@@ -1259,6 +1756,7 @@
       });
     }
 
+    // --- EKSPOR QR CODE ---
     function downloadQRCodePNG(studentName) {
       const container = document.getElementById("qr-temp-container");
       container.innerHTML = "";
@@ -1300,6 +1798,46 @@
         link.href = canvas.toDataURL("image/png");
         link.click();
       }, 300);
+    }
+
+    // --- EKSPOR BARCODE BATANG (1D) ---
+    function downloadBarcodePNG(studentName) {
+      const svg = document.getElementById("barcode-temp-svg");
+      svg.innerHTML = "";
+
+      JsBarcode("#barcode-temp-svg", studentName, {
+        format: "CODE128",
+        width: 2,
+        height: 80,
+        displayValue: true,
+        fontSize: 14,
+        font: "DM Sans"
+      });
+
+      setTimeout(() => {
+        const xml = new XMLSerializer().serializeToString(svg);
+        const svg64 = btoa(unescape(encodeURIComponent(xml)));
+        const image64 = 'data:image/svg+xml;base64,' + svg64;
+
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+
+          canvas.width = img.width + 40;
+          canvas.height = img.height + 40;
+
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 20, 20);
+
+          const link = document.createElement("a");
+          link.download = `Barcode_${studentName.replace(/\s+/g, '_')}.png`;
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+        };
+        img.src = image64;
+      }, 200);
     }
 
     function deleteRecord(id) {
@@ -1351,9 +1889,14 @@
             <td class="p-3">${idx + 1}</td>
             <td class="p-3 font-semibold text-gray-800">${name}</td>
             <td class="p-3">
-              <button onclick="downloadQRCodePNG('${name}')" class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-100 flex items-center gap-1.5">
-                <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> PNG QR Code
-              </button>
+              <div class="flex gap-2">
+                <button onclick="downloadQRCodePNG('${name}')" class="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-100 flex items-center gap-1.5">
+                  <i data-lucide="qr-code" class="w-3.5 h-3.5"></i> PNG QR Code
+                </button>
+                <button onclick="downloadBarcodePNG('${name}')" class="px-3 py-1.5 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg text-xs font-medium hover:bg-indigo-100 flex items-center gap-1.5">
+                  <i data-lucide="barcode" class="w-3.5 h-3.5"></i> PNG Barcode Batang
+                </button>
+              </div>
             </td>
             <td class="p-3 text-center">
               <button onclick="deleteSingleStudent(${idx})" class="p-1.5 bg-red-50 text-red-600 rounded hover:bg-red-100" title="Hapus Siswa">
@@ -1532,11 +2075,16 @@
 
     function showMsg(id, msg, isErr) {
       const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+      if (isErr) {
+        el.classList.add('bg-red-100', 'text-red-700');
+      } else {
+        el.classList.add('bg-green-100', 'text-green-700');
+      }
       el.innerText = msg;
-      el.className = `text-sm p-3 rounded-lg mt-2 ${isErr ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
-      el.classList.remove('hidden');
-      setTimeout(() => el.classList.add('hidden'), 4000);
     }
   </script>
+
 </body>
 </html>
